@@ -1,0 +1,516 @@
+.App {
+  min-height: 100vh;
+  background: #060606;
+  color: #f5f5f5;
+}
+
+.Page {
+  perspective: 1200px;
+}
+
+.IntroScroll {
+  /* Long scroll region that controls media crossfades */
+  height: 185vh;
+  position: relative;
+  --p: var(--intro-progress, 0);
+
+  /* Image fades out early */
+  --imgFade: clamp(0, calc((var(--p) - 0.06) * 3.2), 1);
+  --imgOpacity: calc(1 - var(--imgFade));
+
+  /* Videos fade in, then fade out before Gallery */
+  --vidIn: clamp(0, calc((var(--p) - 0.22) * 4.2), 1);
+  /* Fade out late to avoid a long black gap before About */
+  --vidOut: clamp(0, calc((var(--p) - 0.84) * 8.0), 1);
+  --vidOpacity: calc(var(--vidIn) * (1 - var(--vidOut)));
+
+  /* Abilities overlay: show briefly during early video window */
+  --abIn: clamp(0, calc((var(--p) - 0.26) * 6.0), 1);
+  --abOut: clamp(0, calc((var(--p) - 0.52) * 8.0), 1);
+  --abOpacity: calc(var(--abIn) * (1 - var(--abOut)));
+}
+
+.HeroSticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.HeroBg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: 50% 20%;
+  opacity: var(--imgOpacity);
+  transform: scale(calc(1 + (var(--p) * 0.06)));
+  filter: saturate(0.95) contrast(1.05);
+  will-change: transform;
+}
+
+.HeroVideos {
+  position: absolute;
+  inset: 0;
+  opacity: var(--vidOpacity);
+  will-change: opacity;
+}
+
+.VideoDuo {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  padding: 0;
+  isolation: isolate;
+}
+
+.BgPane {
+  position: relative;
+  overflow: hidden;
+  background: #000;
+}
+
+@media (min-width: 861px) {
+  .VideoDuo::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 40px;
+    transform: translateX(-50%);
+    z-index: 2;
+    pointer-events: none;
+    background: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0),
+      rgba(0, 0, 0, 0.08),
+      rgba(0, 0, 0, 0)
+    );
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+}
+
+.BgVideo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 240%;
+  height: 240%;
+  border: 0;
+  border-radius: 0;
+  background: #000;
+  filter: saturate(1.02) contrast(1.06) brightness(1.14);
+  /* Zoom/crop YouTube to remove letterboxing */
+  transform: translate(-50%, -50%) translateY(-6%) scale(1.02);
+  transform-origin: 50% 50%;
+}
+
+@media (min-width: 861px) {
+  .BgVideo {
+    /* Desktop-only: shift crop upward to show more action */
+    transform: translate(-50%, -50%) translateY(-12%) scale(1.02);
+  }
+}
+
+.HeroOverlay {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(80% 60% at 50% 40%, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.65)),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.85));
+  /* Slightly lift the overlay when videos are visible to keep motion readable */
+  opacity: calc(1 - (var(--vidOpacity, 0) * 0.22));
+}
+
+.HeroContent {
+  position: relative;
+  height: 100%;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  padding: 24px;
+  opacity: var(--imgOpacity);
+  transform:
+    translateY(calc(var(--p) * -18px))
+    scale(clamp(0.92, calc(1 - (var(--p) * 0.04)), 1));
+}
+
+.VideoText {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 20px;
+  opacity: var(--abOpacity);
+  transform: translateY(calc((1 - var(--abOpacity)) * 18px));
+  transition: opacity 180ms linear;
+  pointer-events: none;
+}
+
+.VideoTextInner {
+  width: min(980px, 100%);
+  padding: 0;
+  text-shadow:
+    0 2px 18px rgba(0, 0, 0, 0.65),
+    0 1px 2px rgba(0, 0, 0, 0.85);
+}
+
+.VideoTextTitle {
+  margin: 0;
+  font-size: clamp(18px, 2.2vw, 26px);
+  letter-spacing: 0.02em;
+  font-weight: 600;
+}
+
+.VideoTextBody {
+  margin: 10px 0 0;
+  color: rgba(245, 245, 245, 0.86);
+  line-height: 1.6;
+  max-width: none;
+}
+
+.Pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.Pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 245, 245, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(245, 245, 245, 0.82);
+}
+
+.HeroTitle {
+  margin: 0;
+  letter-spacing: 0.22em;
+  text-indent: 0.22em;
+  font-weight: 600;
+  font-size: clamp(36px, 6vw, 72px);
+  line-height: 1.05;
+}
+
+.HeroSubtitle {
+  margin: 16px 0 0;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 12px;
+  color: rgba(245, 245, 245, 0.78);
+}
+
+.Section {
+  padding: 72px 20px;
+}
+
+
+.SectionInner {
+  max-width: 1020px;
+  margin: 0 auto;
+}
+
+.SectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.SectionTitle {
+  margin: 0;
+  font-size: 14px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.SectionRule {
+  height: 1px;
+  flex: 1;
+  background: rgba(245, 245, 245, 0.15);
+}
+
+.SectionLead {
+  margin: 0 0 28px;
+  font-size: 18px;
+  line-height: 1.6;
+  color: rgba(245, 245, 245, 0.86);
+  max-width: 70ch;
+}
+
+.TwoCol {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 16px;
+}
+
+.TwoCol > .Card {
+  grid-column: span 6;
+}
+
+.GridCards {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 16px;
+}
+
+.GridCards > .Card {
+  grid-column: span 6;
+}
+
+.Card {
+  border: 1px solid rgba(245, 245, 245, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 18px 18px 16px;
+  backdrop-filter: blur(10px);
+}
+
+.Kicker {
+  margin: 0 0 8px;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(245, 245, 245, 0.6);
+}
+
+.CardTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.CardBody {
+  margin: 10px 0 0;
+  color: rgba(245, 245, 245, 0.82);
+  line-height: 1.6;
+}
+
+.Gallery {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 14px;
+}
+
+.Shot {
+  margin: 0;
+  grid-column: span 6;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(245, 245, 245, 0.12);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.ShotImg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  transform: scale(1.02);
+}
+
+.Timeline {
+  display: grid;
+  gap: 16px;
+}
+
+.TimelineItem {
+  display: grid;
+  grid-template-columns: 16px 1fr;
+  gap: 14px;
+  align-items: start;
+  padding: 16px 0;
+  border-top: 1px solid rgba(245, 245, 245, 0.1);
+}
+
+.TimelineItem:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.TimelineDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  margin-top: 6px;
+  background: rgba(245, 245, 245, 0.7);
+  box-shadow: 0 0 0 4px rgba(245, 245, 245, 0.09);
+}
+
+.Contact {
+  max-width: 720px;
+}
+
+.Form {
+  display: grid;
+  gap: 14px;
+}
+
+.Field {
+  display: grid;
+  gap: 8px;
+}
+
+.Label {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(245, 245, 245, 0.7);
+}
+
+.Input {
+  border-radius: 12px;
+  border: 1px solid rgba(245, 245, 245, 0.14);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(245, 245, 245, 0.92);
+  padding: 12px 12px;
+  outline: none;
+  font: inherit;
+}
+
+.Input:focus {
+  border-color: rgba(245, 245, 245, 0.3);
+}
+
+.Textarea {
+  resize: vertical;
+}
+
+.FormActions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.Button {
+  appearance: none;
+  border: 1px solid rgba(245, 245, 245, 0.18);
+  background: rgba(245, 245, 245, 0.9);
+  color: #080808;
+  border-radius: 999px;
+  padding: 10px 16px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.Button:hover {
+  background: rgba(245, 245, 245, 1);
+}
+
+.Link {
+  color: rgba(245, 245, 245, 0.72);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(245, 245, 245, 0.2);
+  padding-bottom: 2px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+}
+
+.LinkButton {
+  appearance: none;
+  background: transparent;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: rgba(245, 245, 245, 0.72);
+  border-bottom: 1px solid rgba(245, 245, 245, 0.2);
+  padding-bottom: 2px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+
+.LinkButton:disabled {
+  border-bottom-style: dashed;
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+
+.Link[aria-disabled='true'] {
+  border-bottom-style: dashed;
+  cursor: default;
+}
+
+.Footer {
+  padding: 32px 20px 56px;
+  border-top: 1px solid rgba(245, 245, 245, 0.08);
+}
+
+.FooterText {
+  margin: 0;
+  text-align: center;
+  color: rgba(245, 245, 245, 0.55);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Reveal effect: sections “come toward you” */
+[data-reveal] {
+  opacity: 0;
+  transform:
+    translateY(44px)
+    translateZ(-140px)
+    rotateX(7deg)
+    scale(0.985);
+  transform-origin: 50% 80%;
+  transition: opacity 700ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 900ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: transform, opacity;
+}
+
+[data-reveal].is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+@media (max-width: 860px) {
+  .VideoDuo {
+    grid-template-columns: 1fr;
+    padding: 0;
+    gap: 0;
+  }
+
+  .VideoText {
+    padding: 20px 16px;
+  }
+
+  .VideoTextInner {
+    padding: 0;
+  }
+
+  .TwoCol > .Card,
+  .GridCards > .Card,
+  .Shot {
+    grid-column: span 12;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .HeroBg,
+  .HeroContent,
+  [data-reveal] {
+    transition: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+}
