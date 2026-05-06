@@ -465,12 +465,14 @@ function App() {
                 </label>
                 <div className="FormActions">
                   <button className="Button" type="submit">Send</button>
-                  <button className="LinkButton" type="button" disabled>
-                    Instagram (add link)
-                  </button>
-                  <button className="LinkButton" type="button" disabled>
-                    LinkedIn (add link)
-                  </button>
+                  <a
+                    className="Link"
+                    href="https://instagram.com/_mahnumfaisal"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Instagram
+                  </a>
                 </div>
               </form>
             </div>
