@@ -20,14 +20,58 @@ function publicAssetUrl(publicUrl, filename) {
 function App() {
   const prefersReducedMotion = usePrefersReducedMotion();
   const introScrollRef = useRef(null);
+  const testimonialsRef = useRef(null);
+  const testimonialLoadingStartedRef = useRef(false);
+  const testimonialIntervalRef = useRef(null);
+  const testimonialFallbackTimeoutRef = useRef(null);
+  const visibleTestimonialsCountRef = useRef(0);
   const publicUrl = process.env.PUBLIC_URL || '';
   const heroImage = publicAssetUrl(publicUrl, 'mahnum.png');
   const [shouldLoadEmbeds, setShouldLoadEmbeds] = useState(false);
+  const [visibleTestimonialsCount, setVisibleTestimonialsCount] = useState(0);
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return false;
+    return window.matchMedia('(max-width: 860px)').matches;
+  });
+
+  useEffect(() => {
+    visibleTestimonialsCountRef.current = visibleTestimonialsCount;
+  }, [visibleTestimonialsCount]);
+
+  const testimonialVideoIds = useMemo(
+    () => [
+      's3_slToHb14',
+      'd2qekwxsQZI',
+      '5wo7fF3nSgE',
+      '5sJPnz5945c',
+      'mOK2sYFmuTc',
+      'UXbJGKFw8DQ',
+    ],
+    []
+  );
+
+  const testimonialEmbedSrcFor = (videoId) =>
+    `https://www.youtube.com/embed/${videoId}?controls=1&playsinline=1&modestbranding=1&rel=0`;
 
   const videoAEmbedSrc =
-    'https://www.youtube.com/embed/7XFBWebyQzs?autoplay=1&mute=1&controls=0&playsinline=1&modestbranding=1&rel=0&loop=1&playlist=7XFBWebyQzs';
+    'https://www.youtube.com/embed/7XFBWebyQzs?autoplay=1&mute=1&controls=0&playsinline=1&modestbranding=1&rel=0&loop=1&playlist=7XFBWebyQzs&fs=0&disablekb=1&iv_load_policy=3&cc_load_policy=0';
   const videoBEmbedSrc =
-    'https://www.youtube.com/embed/zmXyJx94fAs?autoplay=1&mute=1&controls=0&playsinline=1&modestbranding=1&rel=0&loop=1&playlist=zmXyJx94fAs';
+    'https://www.youtube.com/embed/zmXyJx94fAs?autoplay=1&mute=1&controls=0&playsinline=1&modestbranding=1&rel=0&loop=1&playlist=zmXyJx94fAs&fs=0&disablekb=1&iv_load_policy=3&cc_load_policy=0';
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mq = window.matchMedia('(max-width: 860px)');
+    const update = () => setIsMobile(Boolean(mq.matches));
+    update();
+
+    if (mq.addEventListener) {
+      mq.addEventListener('change', update);
+      return () => mq.removeEventListener('change', update);
+    }
+
+    mq.addListener(update);
+    return () => mq.removeListener(update);
+  }, []);
 
   useEffect(() => {
     if (prefersReducedMotion) {
@@ -113,6 +157,69 @@ function App() {
     return () => observer.disconnect();
   }, [prefersReducedMotion]);
 
+  useEffect(() => {
+    const section = testimonialsRef.current;
+    if (!section) return;
+
+    if (prefersReducedMotion || typeof IntersectionObserver === 'undefined') {
+      setVisibleTestimonialsCount(testimonialVideoIds.length);
+      return;
+    }
+
+    const stepMs = isMobile ? 140 : 320;
+    const firstCount = isMobile ? 2 : 1;
+
+    const startLoading = () => {
+      if (testimonialLoadingStartedRef.current) return;
+      testimonialLoadingStartedRef.current = true;
+
+      setVisibleTestimonialsCount((current) => (current > 0 ? current : firstCount));
+
+      testimonialIntervalRef.current = window.setInterval(() => {
+        setVisibleTestimonialsCount((current) => {
+          const next = Math.min(testimonialVideoIds.length, current + 1);
+          if (next >= testimonialVideoIds.length && testimonialIntervalRef.current) {
+            window.clearInterval(testimonialIntervalRef.current);
+            testimonialIntervalRef.current = null;
+          }
+          return next;
+        });
+      }, stepMs);
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          observer.disconnect();
+          startLoading();
+        });
+      },
+      { threshold: 0.05, rootMargin: '700px 0px 700px 0px' }
+    );
+
+    observer.observe(section);
+
+    testimonialFallbackTimeoutRef.current = window.setTimeout(() => {
+      if (visibleTestimonialsCountRef.current !== 0) return;
+      const rect = section.getBoundingClientRect();
+      const nearViewport = rect.top < window.innerHeight * 2.5;
+      if (nearViewport) startLoading();
+    }, isMobile ? 700 : 1400);
+
+    return () => {
+      observer.disconnect();
+      if (testimonialIntervalRef.current) {
+        window.clearInterval(testimonialIntervalRef.current);
+        testimonialIntervalRef.current = null;
+      }
+      if (testimonialFallbackTimeoutRef.current) {
+        window.clearTimeout(testimonialFallbackTimeoutRef.current);
+        testimonialFallbackTimeoutRef.current = null;
+      }
+    };
+  }, [prefersReducedMotion, isMobile, testimonialVideoIds.length]);
+
   return (
     <div className="App">
       <main className="Page" aria-label="Mahnum Faisal portfolio">
@@ -125,9 +232,9 @@ function App() {
                   <iframe
                     className="BgVideo"
                     title="Mahnum polo highlight 1"
-                    src={shouldLoadEmbeds ? videoAEmbedSrc : ''}
+                    src={shouldLoadEmbeds ? videoAEmbedSrc : null}
                     frameBorder="0"
-                    allow="autoplay; encrypted-media; picture-in-picture"
+                    allow="autoplay; encrypted-media"
                     referrerPolicy="strict-origin-when-cross-origin"
                     allowFullScreen={false}
                     tabIndex={-1}
@@ -137,9 +244,9 @@ function App() {
                   <iframe
                     className="BgVideo"
                     title="Mahnum polo highlight 2"
-                    src={shouldLoadEmbeds ? videoBEmbedSrc : ''}
+                    src={shouldLoadEmbeds ? videoBEmbedSrc : null}
                     frameBorder="0"
-                    allow="autoplay; encrypted-media; picture-in-picture"
+                    allow="autoplay; encrypted-media"
                     referrerPolicy="strict-origin-when-cross-origin"
                     allowFullScreen={false}
                     tabIndex={-1}
@@ -179,7 +286,7 @@ function App() {
           </div>
         </section>
 
-        <section className="Section" aria-label="About" data-reveal>
+        <section className="Section Section--AfterIntro" aria-label="About" data-reveal>
           <div className="SectionInner">
             <header className="SectionHeader">
               <h2 className="SectionTitle">About</h2>
@@ -229,6 +336,37 @@ function App() {
                 <h3 className="CardTitle">Growth</h3>
                 <p className="CardBody">Always improving technique, awareness, and match strategy.</p>
               </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="Section" aria-label="Testimonials" ref={testimonialsRef}>
+          <div className="SectionInner">
+            <header className="SectionHeader">
+              <h2 className="SectionTitle">Testimonials</h2>
+              <div className="SectionRule" aria-hidden="true" />
+            </header>
+            <div className="TestimonialGrid" aria-label="Video testimonials">
+              {testimonialVideoIds.map((videoId, index) => (
+                <div className="Card TestimonialCard" key={videoId}>
+                  <div className="TestimonialVideo">
+                    {index < visibleTestimonialsCount ? (
+                      <iframe
+                        className="TestimonialIframe"
+                        title={`Testimonial video ${index + 1}`}
+                        src={testimonialEmbedSrcFor(videoId)}
+                        frameBorder="0"
+                        allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        referrerPolicy="strict-origin-when-cross-origin"
+                        allowFullScreen
+                        loading={isMobile ? 'eager' : 'lazy'}
+                      />
+                    ) : (
+                      <div className="TestimonialPlaceholder" aria-label="Loading testimonial" />
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </section>
