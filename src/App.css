@@ -10,7 +10,7 @@
 
 .IntroScroll {
   /* Long scroll region that controls media crossfades */
-  height: 160vh;
+  height: 180vh;
   position: relative;
   --p: var(--intro-progress, 0);
 
@@ -18,16 +18,21 @@
   --imgFade: clamp(0, calc((var(--p) - 0.10) * 2.7), 1);
   --imgOpacity: calc(1 - var(--imgFade));
 
-  /* Videos fade in, then fade out before Gallery */
-  --vidIn: clamp(0, calc((var(--p) - 0.22) * 4.2), 1);
-  /* Fade out late to avoid a long black gap before About */
-  --vidOut: clamp(0, calc((var(--p) - 0.92) * 12.0), 1);
-  --vidOpacity: calc(var(--vidIn) * (1 - var(--vidOut)));
+  /* Whole scene fades out together near the end */
+  --sceneFade: clamp(0, calc((var(--p) - 0.8) * 8.5), 1);
+  --sceneOpacity: calc(1 - var(--sceneFade));
 
-  /* Abilities overlay: show briefly during early video window */
-  --abIn: clamp(0, calc((var(--p) - 0.26) * 6.0), 1);
-  --abOut: clamp(0, calc((var(--p) - 0.70) * 9.0), 1);
-  --abOpacity: calc(var(--abIn) * (1 - var(--abOut)));
+  /* Title fades away before the About intro appears */
+  --titleFade: clamp(0, calc((var(--p) - 0.24) * 6.5), 1);
+  --titleOpacity: calc(1 - var(--titleFade));
+
+  /* Videos fade in, but do not exit separately from the scene */
+  --vidIn: clamp(0, calc((var(--p) - 0.22) * 4.2), 1);
+  --vidOpacity: calc(var(--vidIn) * var(--sceneOpacity));
+
+  /* About intro arrives later, after the videos are already established */
+  --abIn: clamp(0, calc((var(--p) - 0.48) * 6.5), 1);
+  --abOpacity: calc(var(--abIn) * var(--sceneOpacity));
 }
 
 .HeroSticky {
@@ -43,7 +48,7 @@
   inset: 0;
   background-size: cover;
   background-position: 50% 20%;
-  opacity: var(--imgOpacity);
+  opacity: calc(var(--imgOpacity) * var(--sceneOpacity));
   transform: scale(calc(1 + (var(--p) * 0.06)));
   filter: saturate(0.95) contrast(1.05);
   will-change: transform;
@@ -124,8 +129,8 @@
   background:
     radial-gradient(80% 60% at 50% 40%, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.65)),
     linear-gradient(to bottom, rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.85));
-  /* Slightly lift the overlay when videos are visible to keep motion readable */
-  opacity: calc(1 - (var(--vidOpacity, 0) * 0.22));
+  /* Darken the scene as it exits so the transition to black feels intentional */
+  opacity: calc(0.28 + (var(--sceneFade) * 0.72));
 }
 
 
@@ -137,65 +142,52 @@
   place-content: center;
   text-align: center;
   padding: 24px;
-  opacity: var(--imgOpacity);
+  opacity: var(--titleOpacity);
   transform:
     translateY(calc(var(--p) * -18px))
     scale(clamp(0.92, calc(1 - (var(--p) * 0.04)), 1));
 }
 
-.VideoText {
+.HeroAbout {
   position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px 20px;
+  padding: 0 20px;
   opacity: var(--abOpacity);
-  transform: translateY(calc((1 - var(--abOpacity)) * 18px));
-  transition: opacity 180ms linear;
+  transform: translateY(calc(-6vh + (1 - var(--abOpacity)) * 18px));
+  transition: opacity 160ms linear;
   pointer-events: none;
 }
 
-.VideoTextInner {
-  width: min(980px, 100%);
+.HeroAboutInner {
+  width: min(100%, 980px);
   padding: 0;
+  display: grid;
+  justify-items: center;
+  text-align: center;
   text-shadow:
     0 2px 18px rgba(0, 0, 0, 0.65),
     0 1px 2px rgba(0, 0, 0, 0.85);
 }
 
-.VideoTextTitle {
+.HeroAboutPoints {
+  display: grid;
+  gap: 0;
+  justify-items: center;
+}
+
+.HeroAboutText {
+  display: block;
   margin: 0;
-  font-size: clamp(18px, 2.2vw, 26px);
-  letter-spacing: 0.02em;
-  font-weight: 600;
-}
-
-.VideoTextBody {
-  margin: 10px 0 0;
-  color: rgba(245, 245, 245, 0.86);
-  line-height: 1.6;
-  max-width: none;
-}
-
-.Pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 14px;
-}
-
-.Pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 8px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(245, 245, 245, 0.14);
-  background: rgba(255, 255, 255, 0.04);
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: rgba(245, 245, 245, 0.82);
+  width: 100%;
+  padding: 8px 16px;
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.96);
+  color: rgba(245, 245, 245, 0.96);
+  line-height: 1.25;
+  font-size: 17px;
 }
 
 .HeroTitle {
@@ -216,11 +208,11 @@
 }
 
 .Section {
-  padding: 72px 20px;
+  padding: 48px 20px;
 }
 
 .Section--AfterIntro {
-  padding-top: 48px;
+  padding-top: 0;
 }
 
 
@@ -258,6 +250,19 @@
   max-width: 70ch;
 }
 
+.AboutCopy {
+  display: grid;
+  gap: 16px;
+  max-width: 78ch;
+}
+
+.AboutCopy p {
+  margin: 0;
+  line-height: 1.75;
+  color: rgba(245, 245, 245, 0.86);
+  font-size: 17px;
+}
+
 .TwoCol {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
@@ -276,6 +281,25 @@
 
 .GridCards > .Card {
   grid-column: span 6;
+}
+
+.HighlightGrid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 16px;
+}
+
+.HighlightCard {
+  grid-column: span 6;
+}
+
+.HighlightList {
+  margin: 12px 0 0;
+  padding: 0 0 0 18px;
+  display: grid;
+  gap: 10px;
+  color: rgba(245, 245, 245, 0.84);
+  line-height: 1.55;
 }
 
 .Card {
@@ -349,6 +373,100 @@
   background:
     radial-gradient(60% 50% at 50% 35%, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02)),
     linear-gradient(to bottom, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+}
+
+.InterviewGrid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 16px;
+}
+
+.InterviewCard {
+  grid-column: span 6;
+  padding: 12px;
+  display: grid;
+  gap: 14px;
+}
+
+.InterviewMedia {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+  border: 1px solid rgba(245, 245, 245, 0.1);
+}
+
+.InterviewIframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.InterviewPlaceholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: rgba(245, 245, 245, 0.8);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 11px;
+  background:
+    radial-gradient(60% 50% at 50% 35%, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02)),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+}
+
+.InterviewThumbnail {
+  position: absolute;
+  inset: 0;
+}
+
+.InterviewThumbnailImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(16px) saturate(0.9) brightness(0.7);
+  transform: scale(1.12);
+}
+
+.InterviewThumbnailImg--feature {
+  filter: none;
+  transform: none;
+}
+
+.InterviewThumbnailOverlay {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(80% 70% at 50% 35%, rgba(0, 0, 0, 0.22), rgba(0, 0, 0, 0.7)),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.55));
+}
+
+.InterviewThumbnailOverlay--feature {
+  background:
+    radial-gradient(80% 70% at 50% 35%, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.4)),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.2));
+}
+
+.InterviewBody {
+  padding: 0 2px 2px;
+}
+
+.InterviewLink {
+  display: inline-flex;
+  margin-top: 10px;
+  color: rgba(245, 245, 245, 0.75);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(245, 245, 245, 0.2);
+  padding-bottom: 2px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
 }
 
 .Shot {
@@ -531,11 +649,11 @@
 
 @media (max-width: 860px) {
   .Section {
-    padding: 56px 16px;
+    padding: 36px 16px;
   }
 
   .Section--AfterIntro {
-    padding-top: 32px;
+    padding-top: 0;
   }
 
   /* Mobile Safari can be flaky with IntersectionObserver + 3D transforms.
@@ -552,17 +670,20 @@
     gap: 0;
   }
 
-  .VideoText {
-    padding: 20px 16px;
+  .HeroAbout {
+    padding: 0 16px;
+    transform: translateY(calc(-4vh + (1 - var(--abOpacity)) * 18px));
   }
 
-  .VideoTextInner {
+  .HeroAboutInner {
     padding: 0;
   }
 
   .TwoCol > .Card,
   .GridCards > .Card,
+  .HighlightCard,
   .TestimonialCard,
+  .InterviewCard,
   .Shot {
     grid-column: span 12;
   }
