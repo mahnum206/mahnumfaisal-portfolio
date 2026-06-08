@@ -372,7 +372,9 @@ function App() {
               <div className="HeroAboutInner">
                 <div className="HeroAboutPoints">
                   <span className="HeroAboutText">
-                    Mahnum Faisal's portfolio, shaped by discipline, elegance, and ambition.
+                    Mahnum Faisal&apos;s portfolio, shaped by discipline
+                    <br className="HeroAboutBreak" />
+                    elegance, and ambition.
                   </span>
                 </div>
               </div>
